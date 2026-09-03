@@ -26,6 +26,15 @@ export async function GET(request: NextRequest) {
                 'Accept': '*/*',
               },
             });
+
+            if (res && res.ok) {
+              const fetchedContentType = (res.headers.get('content-type') || '').toLowerCase();
+              
+              // If targetUrl is an HTML page/player, redirect browser directly to targetUrl
+              if (fetchedContentType.includes('text/html')) {
+                return NextResponse.redirect(targetUrl, 302);
+              }
+            }
           }
         }
       } catch {

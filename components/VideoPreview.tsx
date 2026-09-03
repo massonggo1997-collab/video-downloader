@@ -79,11 +79,12 @@ export function VideoPreview({ video }: VideoPreviewProps) {
             <span className="text-[11px] text-slate-400 hidden sm:inline">Auto-Downloader Active</span>
           </div>
 
-          <div className="relative aspect-video w-full bg-black">
+          <div className="relative aspect-video w-full max-w-full bg-black overflow-hidden">
             {video.sourceUrl.endsWith('.mp4') || video.sourceUrl.endsWith('.webm') ? (
               <video
                 src={video.sourceUrl}
                 controls
+                playsInline
                 className="w-full h-full object-contain"
                 onLoadedMetadata={(e) => {
                   if (e.currentTarget.duration && !isNaN(e.currentTarget.duration)) {
@@ -94,9 +95,10 @@ export function VideoPreview({ video }: VideoPreviewProps) {
             ) : (
               <iframe
                 src={video.sourceUrl}
-                className="w-full h-full border-0"
+                className="w-full h-full border-0 max-w-full object-contain overflow-hidden touch-manipulation"
+                scrolling="no"
                 allowFullScreen
-                allow="autoplay; encrypted-media"
+                allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
               />
             )}
           </div>

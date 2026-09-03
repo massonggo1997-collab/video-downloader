@@ -74,44 +74,78 @@ export class HTML5VideoExtractor implements VideoExtractor {
           thumbnail = imageMatch[1].trim();
         }
 
-        // Extract embedded player iframe src (preferring id="mediaplayer" or any iframe player)
-        const iframeMatch = html.match(/<iframe[^>]*id=["']mediaplayer["'][^>]*src=["']([^"']+)["']/i) ||
-                            html.match(/<iframe[^>]*src=["']([^"']+)["'][^>]*id=["']mediaplayer["']/i) ||
-                            html.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+        // Extract all iframe src links and find the video player iframe
+        const allIframeMatches = Array.from(html.matchAll(/<iframe[^>]+src=["']([^"']+)["']/gi));
+        let playerIframeUrl: string | undefined = undefined;
 
-        if (iframeMatch && iframeMatch[1]) {
+        for (const match of allIframeMatches) {
+          const rawSrc = match[1];
+          if (!rawSrc) continue;
+
           try {
-            const resolvedIframeUrl = new URL(iframeMatch[1], urlStr).toString();
-            if (resolvedIframeUrl.startsWith('http://') || resolvedIframeUrl.startsWith('https://')) {
-              detectedStreamUrl = resolvedIframeUrl;
+            const resolved = new URL(rawSrc, urlStr).toString();
+            const lower = resolved.toLowerCase();
 
-              // Attempt level 2 iframe resolution if level 1 is an intermediate player wrapper
-              if (resolvedIframeUrl.includes('adsbatch') || resolvedIframeUrl.includes('player') || resolvedIframeUrl.includes('upload')) {
-                try {
-                  const level2Res = await fetch(resolvedIframeUrl, {
-                    signal: controller.signal,
-                    headers: {
-                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-                      'Referer': urlStr,
-                    },
-                  });
-                  if (level2Res.ok) {
-                    const level2Html = await level2Res.text();
-                    const level2Match = level2Html.match(/<iframe[^>]+src=["']([^"']+)["']/i);
-                    if (level2Match && level2Match[1]) {
-                      const resolvedLevel2Url = new URL(level2Match[1], resolvedIframeUrl).toString();
-                      if (resolvedLevel2Url.startsWith('http://') || resolvedLevel2Url.startsWith('https://')) {
-                        detectedStreamUrl = resolvedLevel2Url;
-                      }
-                    }
-                  }
-                } catch {
-                  // Keep level 1 URL
-                }
-              }
+            // Skip ads, social widgets, and analytics
+            if (
+              lower.includes('google') ||
+              lower.includes('facebook') ||
+              lower.includes('disqus') ||
+              lower.includes('analytics') ||
+              lower.includes('doubleclick') ||
+              lower.includes('syndication')
+            ) {
+              continue;
+            }
+
+            // Prioritize known video players or mediaplayer id
+            if (
+              lower.includes('adsbatch') ||
+              lower.includes('blogger.com') ||
+              lower.includes('player') ||
+              lower.includes('embed') ||
+              lower.includes('stream') ||
+              lower.includes('mp4upload') ||
+              match[0].includes('mediaplayer')
+            ) {
+              playerIframeUrl = resolved;
+              break;
+            }
+
+            if (!playerIframeUrl && (resolved.startsWith('http://') || resolved.startsWith('https://'))) {
+              playerIframeUrl = resolved;
             }
           } catch {
-            detectedStreamUrl = urlStr;
+            // Ignore invalid URLs
+          }
+        }
+
+        if (playerIframeUrl) {
+          detectedStreamUrl = playerIframeUrl;
+
+          // Attempt level 2 iframe resolution if level 1 is an intermediate wrapper (e.g. adsbatch)
+          if (playerIframeUrl.includes('adsbatch') || playerIframeUrl.includes('player')) {
+            try {
+              const level2Res = await fetch(playerIframeUrl, {
+                signal: controller.signal,
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                  'Referer': urlStr,
+                },
+              });
+              if (level2Res.ok) {
+                const level2Html = await level2Res.text();
+                const level2Match = level2Html.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+                if (level2Match && level2Match[1]) {
+                  const resolvedLevel2Url = new URL(level2Match[1], playerIframeUrl).toString();
+                  if (resolvedLevel2Url.startsWith('http://') || resolvedLevel2Url.startsWith('https://')) {
+                    detectedStreamUrl = resolvedLevel2Url;
+                  }
+                }
+              }
+            } catch {
+              // Keep level 1 URL
+            }
           }
         }
       }
@@ -122,7 +156,12 @@ export class HTML5VideoExtractor implements VideoExtractor {
 
     const formats = await this.getFormats(urlStr, fetchedHtml);
 
-
+    if (detectedStreamUrl === urlStr) {
+      const validFormatUrl = formats.find(f => f.sourceUrl && f.sourceUrl !== urlStr)?.sourceUrl;
+      if (validFormatUrl) {
+        detectedStreamUrl = validFormatUrl;
+      }
+    }
 
     return {
       title: pageTitle,

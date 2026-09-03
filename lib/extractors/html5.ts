@@ -79,6 +79,9 @@ export class HTML5VideoExtractor implements VideoExtractor {
     let pageTitle = `Media from ${domain}`;
     let thumbnail: string | undefined = `https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&auto=format&fit=crop&q=80`;
 
+    let detectedStreamUrl = urlStr;
+    let durationSec = 1420; // Default 23-minute episode estimate for anime streaming pages
+
     // Attempt to fetch public page metadata safely with a tight timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -110,6 +113,12 @@ export class HTML5VideoExtractor implements VideoExtractor {
         if (imageMatch && imageMatch[1]) {
           thumbnail = imageMatch[1].trim();
         }
+
+        // Extract embedded player iframe src
+        const iframeMatch = html.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+        if (iframeMatch && iframeMatch[1]) {
+          detectedStreamUrl = iframeMatch[1];
+        }
       }
     } catch {
       clearTimeout(timeoutId);
@@ -121,8 +130,8 @@ export class HTML5VideoExtractor implements VideoExtractor {
     return {
       title: pageTitle,
       thumbnail,
-      duration: 240,
-      sourceUrl: urlStr,
+      duration: durationSec,
+      sourceUrl: detectedStreamUrl,
       sourceDomain: domain,
       formats,
     };

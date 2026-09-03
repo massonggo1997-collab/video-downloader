@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="viddlGrad" x1="0" y1="32" x2="32" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded Rect matching logo -->
+  <rect width="32" height="32" rx="9" fill="url(#viddlGrad)"/>
+  <!-- Video Camera Icon -->
+  <path d="M6 10.5C6 9.11929 7.11929 8 8.5 8H16.5C17.8807 8 19 9.11929 19 10.5V21.5C19 22.8807 17.8807 24 16.5 24H8.5C7.11929 24 6 22.8807 6 21.5V10.5Z" fill="white"/>
+  <path d="M21 12.5L26 9.5V22.5L21 19.5V12.5Z" fill="white" fill-opacity="0.85"/>
+  <!-- Download arrow overlay on body -->
+  <path d="M12.5 11V18.5M12.5 18.5L9.5 15.5M12.5 18.5L15.5 15.5" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

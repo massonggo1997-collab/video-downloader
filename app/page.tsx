@@ -161,22 +161,10 @@ export default function HomePage() {
         />
       )}
 
-      {/* Video Preview & Format Selection */}
+      {/* Video Preview & Player */}
       {videoInfo && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <VideoPreview video={videoInfo} />
-
-          <FormatSelector
-            formats={videoInfo.formats}
-            selectedFormatId={selectedFormatId}
-            onSelect={setSelectedFormatId}
-          />
-
-          <DownloadButton
-            onClick={handleCreateDownload}
-            isLoading={isDownloading}
-            disabled={!selectedFormatId}
-          />
         </div>
       )}
 

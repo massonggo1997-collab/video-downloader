@@ -117,7 +117,14 @@ export class HTML5VideoExtractor implements VideoExtractor {
         // Extract embedded player iframe src
         const iframeMatch = html.match(/<iframe[^>]+src=["']([^"']+)["']/i);
         if (iframeMatch && iframeMatch[1]) {
-          detectedStreamUrl = iframeMatch[1];
+          try {
+            const resolvedIframeUrl = new URL(iframeMatch[1], urlStr).toString();
+            if (resolvedIframeUrl.startsWith('http://') || resolvedIframeUrl.startsWith('https://')) {
+              detectedStreamUrl = resolvedIframeUrl;
+            }
+          } catch {
+            detectedStreamUrl = urlStr;
+          }
         }
       }
     } catch {

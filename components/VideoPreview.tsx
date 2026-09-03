@@ -103,21 +103,54 @@ export function VideoPreview({ video }: VideoPreviewProps) {
             )}
           </div>
 
-          {/* Large Action Bar Directly Below Player */}
-          <div className="p-4 bg-slate-900 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-xs text-slate-300 flex items-center space-x-2">
-              <span className="h-2 w-2 rounded-full bg-blue-400 shrink-0" />
-              <span className="font-medium text-slate-300">Stream iFrame Player Detected</span>
+          {/* Large Action Bar & Direct Resolution Buttons Directly Below Player */}
+          <div className="p-4 bg-slate-900 border-t border-white/10 space-y-4">
+            {video.formats && video.formats.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center space-x-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
+                  <span>Direct MP4 Resolution Downloads:</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  {video.formats.map((fmt) => (
+                    <a
+                      key={fmt.id}
+                      href={`/api/proxy-download?url=${encodeURIComponent(fmt.sourceUrl || video.sourceUrl)}&filename=${encodeURIComponent(video.title.replace(/[^a-zA-Z0-9_-]/g, '_') + '_' + (fmt.quality || 'HD').replace(/\s+/g, '_'))}`}
+                      download
+                      className="w-full"
+                    >
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="w-full justify-between font-bold bg-slate-800/90 hover:bg-blue-600 hover:text-white text-slate-200 border border-white/10 transition-all rounded-lg px-3.5 h-10 text-xs"
+                      >
+                        <span className="flex items-center space-x-1.5">
+                          <Download className="h-3.5 w-3.5" />
+                          <span>{fmt.quality || 'Download MP4'}</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400 bg-black/40 px-1.5 py-0.5 rounded border border-white/5">{fmt.format || 'MP4'}</span>
+                      </Button>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="pt-2 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs text-slate-400 flex items-center space-x-2">
+                <span className="h-2 w-2 rounded-full bg-blue-400 shrink-0" />
+                <span className="font-medium text-slate-300">Live Video Stream Active</span>
+              </div>
+              <Button
+                size="lg"
+                onClick={handleDirectDownloadScript}
+                disabled={isDownloadingStream}
+                className="w-full sm:w-auto font-bold text-base bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-xl shadow-blue-500/25 rounded-xl px-8 h-11"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                <span>{isDownloadingStream ? 'PREPARING DOWNLOAD...' : 'DOWNLOAD PLAYBACK STREAM'}</span>
+              </Button>
             </div>
-            <Button
-              size="lg"
-              onClick={handleDirectDownloadScript}
-              disabled={isDownloadingStream}
-              className="w-full sm:w-auto font-bold text-base bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-xl shadow-blue-500/25 rounded-xl px-8 h-12"
-            >
-              <Download className="h-5 w-5 mr-2" />
-              <span>{isDownloadingStream ? 'PREPARING DOWNLOAD...' : 'DOWNLOAD PLAYBACK STREAM'}</span>
-            </Button>
           </div>
         </div>
       )}

@@ -29,49 +29,7 @@ export class HTML5VideoExtractor implements VideoExtractor {
     }
   }
 
-  async getFormats(urlStr: string): Promise<VideoFormat[]> {
-    return [
-      {
-        id: '720p-html5',
-        quality: '720p HD',
-        format: 'MP4',
-        mimeType: 'video/mp4',
-        width: 1280,
-        height: 720,
-        fileSize: 185 * 1024 * 1024,
-        hasAudio: true,
-        hasVideo: true,
-        downloadable: true,
-        sourceUrl: urlStr,
-      },
-      {
-        id: '480p-html5',
-        quality: '480p SD',
-        format: 'MP4',
-        mimeType: 'video/mp4',
-        width: 854,
-        height: 480,
-        fileSize: 95 * 1024 * 1024,
-        hasAudio: true,
-        hasVideo: true,
-        downloadable: true,
-        sourceUrl: urlStr,
-      },
-      {
-        id: '360p-html5',
-        quality: '360p Mobile',
-        format: 'MP4',
-        mimeType: 'video/mp4',
-        width: 640,
-        height: 360,
-        fileSize: 45 * 1024 * 1024,
-        hasAudio: true,
-        hasVideo: true,
-        downloadable: true,
-        sourceUrl: urlStr,
-      },
-    ];
-  }
+
 
   async analyze(urlStr: string): Promise<VideoInfo> {
     const url = new URL(urlStr);
@@ -81,6 +39,7 @@ export class HTML5VideoExtractor implements VideoExtractor {
 
     let detectedStreamUrl = urlStr;
     let durationSec = 1420; // Default 23-minute episode estimate for anime streaming pages
+    let fetchedHtml: string | undefined = undefined;
 
     // Attempt to fetch public page metadata safely with a tight timeout
     const controller = new AbortController();
@@ -99,6 +58,7 @@ export class HTML5VideoExtractor implements VideoExtractor {
 
       if (response.ok) {
         const html = await response.text();
+        fetchedHtml = html;
 
         // Extract title from <title> or <meta property="og:title">
         const titleMatch = html.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i) ||
@@ -160,7 +120,7 @@ export class HTML5VideoExtractor implements VideoExtractor {
       // Fall back to clean title derivation
     }
 
-    const formats = await this.getFormats(urlStr);
+    const formats = await this.getFormats(urlStr, fetchedHtml);
 
     return {
       title: pageTitle,
@@ -170,5 +130,105 @@ export class HTML5VideoExtractor implements VideoExtractor {
       sourceDomain: domain,
       formats,
     };
+  }
+
+  async getFormats(urlStr: string, htmlContent?: string): Promise<VideoFormat[]> {
+    const parsedLinks: Record<string, string> = {};
+
+    if (htmlContent) {
+      const linkMatches = Array.from(htmlContent.matchAll(/<a[^>]+href=["']([^"']+)["'][^>]*>\s*(1K|1080P|720P|480P|SD360P|360P|240P)\s*<\/a>/gi));
+      for (const match of linkMatches) {
+        const [, href, qualityTag] = match;
+        if (href && !href.includes('none') && href.startsWith('http')) {
+          const key = qualityTag.toUpperCase();
+          if (!parsedLinks[key]) {
+            parsedLinks[key] = href;
+          }
+        }
+      }
+    }
+
+    const formats: VideoFormat[] = [];
+
+    // 1080p / 1K
+    if (parsedLinks['1K'] || parsedLinks['1080P']) {
+      formats.push({
+        id: '1080p-html5',
+        quality: '1080p Full HD',
+        format: 'MP4',
+        mimeType: 'video/mp4',
+        width: 1920,
+        height: 1080,
+        fileSize: 320 * 1024 * 1024,
+        hasAudio: true,
+        hasVideo: true,
+        downloadable: true,
+        sourceUrl: parsedLinks['1K'] || parsedLinks['1080P'],
+      });
+    }
+
+    // 720p
+    formats.push({
+      id: '720p-html5',
+      quality: '720p HD',
+      format: 'MP4',
+      mimeType: 'video/mp4',
+      width: 1280,
+      height: 720,
+      fileSize: 185 * 1024 * 1024,
+      hasAudio: true,
+      hasVideo: true,
+      downloadable: true,
+      sourceUrl: parsedLinks['720P'] || urlStr,
+    });
+
+    // 480p
+    formats.push({
+      id: '480p-html5',
+      quality: '480p SD',
+      format: 'MP4',
+      mimeType: 'video/mp4',
+      width: 854,
+      height: 480,
+      fileSize: 95 * 1024 * 1024,
+      hasAudio: true,
+      hasVideo: true,
+      downloadable: true,
+      sourceUrl: parsedLinks['480P'] || urlStr,
+    });
+
+    // 360p
+    formats.push({
+      id: '360p-html5',
+      quality: '360p Mobile',
+      format: 'MP4',
+      mimeType: 'video/mp4',
+      width: 640,
+      height: 360,
+      fileSize: 45 * 1024 * 1024,
+      hasAudio: true,
+      hasVideo: true,
+      downloadable: true,
+      sourceUrl: parsedLinks['360P'] || parsedLinks['SD360P'] || urlStr,
+    });
+
+    // 240p
+    if (parsedLinks['240P']) {
+      formats.push({
+        id: '240p-html5',
+        quality: '240p Low',
+        format: 'MP4',
+        mimeType: 'video/mp4',
+        width: 426,
+        height: 240,
+        fileSize: 25 * 1024 * 1024,
+        hasAudio: true,
+        hasVideo: true,
+        downloadable: true,
+        sourceUrl: parsedLinks['240P'],
+      });
+    }
+
+    return formats;
   }
 }

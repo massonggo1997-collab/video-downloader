@@ -68,7 +68,7 @@ export class HTML5VideoExtractor implements VideoExtractor {
     let pageTitle = `Media from ${domain}`;
     let thumbnail: string | undefined = `https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&auto=format&fit=crop&q=80`;
 
-    let detectedStreamUrl = urlStr;
+    let detectedStreamUrl: string | undefined = urlStr;
     let durationSec: number | undefined = undefined;
     let fetchedHtml: string | undefined = undefined;
 
@@ -142,10 +142,6 @@ export class HTML5VideoExtractor implements VideoExtractor {
               playerIframeUrl = resolved;
               break;
             }
-
-            if (!playerIframeUrl && (resolved.startsWith('http://') || resolved.startsWith('https://'))) {
-              playerIframeUrl = resolved;
-            }
           } catch {
             // Ignore invalid URLs
           }
@@ -201,16 +197,14 @@ export class HTML5VideoExtractor implements VideoExtractor {
 
     if (detectedStreamUrl === urlStr) {
       const validFormatUrl = formats.find(f => f.sourceUrl && f.sourceUrl !== urlStr)?.sourceUrl;
-      if (validFormatUrl) {
-        detectedStreamUrl = validFormatUrl;
-      }
+      detectedStreamUrl = validFormatUrl || undefined;
     }
 
     return {
       title: pageTitle,
       thumbnail,
       duration: durationSec,
-      sourceUrl: detectedStreamUrl,
+      sourceUrl: detectedStreamUrl || urlStr,
       sourceDomain: domain,
       formats,
     };

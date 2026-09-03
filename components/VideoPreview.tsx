@@ -69,8 +69,7 @@ export function VideoPreview({ video }: VideoPreviewProps) {
       </div>
 
       {/* Main Full-Width Video Player & Download Action */}
-      {video.sourceUrl && (
-        <div className="w-full rounded-xl overflow-hidden border border-white/10 bg-black shadow-2xl">
+      <div className="w-full rounded-xl overflow-hidden border border-white/10 bg-black shadow-2xl">
           <div className="bg-slate-950 px-4 py-2.5 text-xs font-mono text-slate-400 border-b border-white/10 flex items-center justify-between">
             <span className="flex items-center space-x-2">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -79,8 +78,8 @@ export function VideoPreview({ video }: VideoPreviewProps) {
             <span className="text-[11px] text-slate-400 hidden sm:inline">Auto-Downloader Active</span>
           </div>
 
-          <div className="relative aspect-video w-full max-w-full bg-black overflow-hidden">
-            {video.sourceUrl.endsWith('.mp4') || video.sourceUrl.endsWith('.webm') ? (
+          <div className="relative aspect-video w-full max-w-full bg-black overflow-hidden flex items-center justify-center">
+            {video.sourceUrl && (video.sourceUrl.endsWith('.mp4') || video.sourceUrl.endsWith('.webm') || video.sourceUrl.includes('googlevideo.com')) ? (
               <video
                 src={video.sourceUrl}
                 controls
@@ -92,7 +91,7 @@ export function VideoPreview({ video }: VideoPreviewProps) {
                   }
                 }}
               />
-            ) : (
+            ) : video.sourceUrl && (video.sourceUrl.includes('blogger.com') || video.sourceUrl.includes('adsbatch') || video.sourceUrl.includes('player') || video.sourceUrl.includes('embed')) ? (
               <iframe
                 src={video.sourceUrl}
                 className="w-full h-full border-0 max-w-full object-contain overflow-hidden touch-manipulation"
@@ -100,6 +99,14 @@ export function VideoPreview({ video }: VideoPreviewProps) {
                 allowFullScreen
                 allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
               />
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center p-6 space-y-3 bg-gradient-to-b from-slate-900 to-black w-full h-full">
+                <div className="h-16 w-16 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                  <Film className="h-8 w-8" />
+                </div>
+                <h3 className="text-sm font-semibold text-slate-200 max-w-md line-clamp-1">{video.title}</h3>
+                <p className="text-xs text-slate-400">Pilih tombol resolusi MP4 di bawah untuk langsung mengunduh file video</p>
+              </div>
             )}
           </div>
 
@@ -153,7 +160,6 @@ export function VideoPreview({ video }: VideoPreviewProps) {
             </div>
           </div>
         </div>
-      )}
     </Card>
   );
 }

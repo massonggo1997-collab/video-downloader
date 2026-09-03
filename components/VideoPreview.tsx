@@ -11,6 +11,41 @@ interface VideoPreviewProps {
 
 export function VideoPreview({ video }: VideoPreviewProps) {
   const [duration, setDuration] = React.useState<number | undefined>(video.duration);
+  const [isDownloadingStream, setIsDownloadingStream] = React.useState(false);
+
+  const handleDirectDownloadScript = async () => {
+    if (!video.sourceUrl) return;
+
+    try {
+      setIsDownloadingStream(true);
+      const safeName = video.title.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+      if (video.sourceUrl.endsWith('.mp4') || video.sourceUrl.endsWith('.webm')) {
+        const response = await fetch(video.sourceUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `${safeName}.mp4`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } else {
+        const proxyUrl = `/api/proxy-download?url=${encodeURIComponent(video.sourceUrl)}&filename=${encodeURIComponent(safeName)}`;
+        const win = window.open(proxyUrl, '_blank');
+        if (!win) {
+          window.location.href = proxyUrl;
+        }
+      }
+    } catch {
+      const safeName = video.title.replace(/[^a-zA-Z0-9_-]/g, '_');
+      window.location.href = `/api/proxy-download?url=${encodeURIComponent(video.sourceUrl)}&filename=${encodeURIComponent(safeName)}`;
+    } finally {
+      setIsDownloadingStream(false);
+    }
+  };
 
   return (
     <Card className="p-6 overflow-hidden border-white/10 bg-slate-900/90 shadow-2xl space-y-5">
@@ -41,7 +76,7 @@ export function VideoPreview({ video }: VideoPreviewProps) {
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-slate-200 font-semibold">Live Video Player Stream</span>
             </span>
-            <span className="text-[11px] text-slate-400 hidden sm:inline">Right-click player to &quot;Save video as...&quot;</span>
+            <span className="text-[11px] text-slate-400 hidden sm:inline">Auto-Downloader Active</span>
           </div>
 
           <div className="relative aspect-video w-full bg-black">
@@ -72,19 +107,15 @@ export function VideoPreview({ video }: VideoPreviewProps) {
               <span className="h-2 w-2 rounded-full bg-blue-400 shrink-0" />
               <span className="font-medium text-slate-300">Stream iFrame Player Detected</span>
             </div>
-            <a
-              href={`/api/proxy-download?url=${encodeURIComponent(video.sourceUrl)}&filename=${encodeURIComponent(video.title.replace(/[^a-zA-Z0-9_-]/g, '_'))}`}
-              download
-              className="w-full sm:w-auto"
+            <Button
+              size="lg"
+              onClick={handleDirectDownloadScript}
+              disabled={isDownloadingStream}
+              className="w-full sm:w-auto font-bold text-base bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-xl shadow-blue-500/25 rounded-xl px-8 h-12"
             >
-              <Button
-                size="lg"
-                className="w-full sm:w-auto font-bold text-base bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-xl shadow-blue-500/25 rounded-xl px-8 h-12"
-              >
-                <Download className="h-5 w-5 mr-2" />
-                <span>DOWNLOAD PLAYBACK STREAM</span>
-              </Button>
-            </a>
+              <Download className="h-5 w-5 mr-2" />
+              <span>{isDownloadingStream ? 'PREPARING DOWNLOAD...' : 'DOWNLOAD PLAYBACK STREAM'}</span>
+            </Button>
           </div>
         </div>
       )}

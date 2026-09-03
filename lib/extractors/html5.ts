@@ -16,6 +16,37 @@ function decodeHtmlEntities(str: string): string {
     .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
 }
 
+async function extractBloggerGoogleVideoUrl(bloggerUrl: string): Promise<string | undefined> {
+  try {
+    const res = await fetch(bloggerUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+      },
+    });
+    if (res.ok) {
+      const html = await res.text();
+      const playUrlMatch = html.match(/"play_url"\s*:\s*"([^"]+)"/i) ||
+                           html.match(/(https?:\\\/\\\/[^"]*googlevideo\.com\\\/videoplayback[^"]*)/i) ||
+                           html.match(/(https?:\/\/[^"'\s]*googlevideo\.com\/videoplayback[^"'\s]*)/i);
+
+      if (playUrlMatch && playUrlMatch[1]) {
+        let streamUrl = playUrlMatch[1]
+          .replace(/\\\/\\\/|\\/g, '/')
+          .replace(/\\u003d/g, '=')
+          .replace(/\\u0026/g, '&');
+
+        if (streamUrl.startsWith('//')) {
+          streamUrl = `https:${streamUrl}`;
+        }
+        return streamUrl;
+      }
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
 export class HTML5VideoExtractor implements VideoExtractor {
   id = 'html5';
   name = 'Public HTML5 Web Page Extractor';
@@ -145,6 +176,18 @@ export class HTML5VideoExtractor implements VideoExtractor {
               }
             } catch {
               // Keep level 1 URL
+            }
+          }
+
+          // If detectedStreamUrl is a Blogger video player URL, extract the direct Google Video MP4 stream!
+          if (detectedStreamUrl.includes('blogger.com')) {
+            try {
+              const directGoogleVideoUrl = await extractBloggerGoogleVideoUrl(detectedStreamUrl);
+              if (directGoogleVideoUrl) {
+                detectedStreamUrl = directGoogleVideoUrl;
+              }
+            } catch {
+              // Keep blogger URL as fallback
             }
           }
         }

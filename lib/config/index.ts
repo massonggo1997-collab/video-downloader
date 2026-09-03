@@ -1,7 +1,7 @@
 export const APP_CONFIG = {
   appName: 'VIDDL',
   appDescription: 'Universal Video Downloader from URL',
-  processingProvider: (process.env.PROCESSING_PROVIDER || 'mock') as 'mock' | 'external',
+  processingProvider: (process.env.PROCESSING_PROVIDER || 'native') as 'mock' | 'external' | 'native',
   processingApiUrl: process.env.PROCESSING_API_URL || 'https://api.mock-processor.local',
   processingApiKey: process.env.PROCESSING_API_KEY || '',
   rateLimit: {

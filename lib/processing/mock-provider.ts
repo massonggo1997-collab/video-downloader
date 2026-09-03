@@ -45,7 +45,7 @@ export class MockProcessingProvider implements ProcessingProvider {
         id,
         status: 'PROCESSING',
         progress: 55,
-        fileUrl: `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4`,
+        fileUrl: `https://vjs.zencdn.net/v/oceans.mp4`,
       };
     }
 
@@ -61,7 +61,7 @@ export class MockProcessingProvider implements ProcessingProvider {
     } else {
       record.status = 'COMPLETED';
       record.progress = 100;
-      record.fileUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+      record.fileUrl = 'https://vjs.zencdn.net/v/oceans.mp4';
     }
 
     mockJobsStore.set(id, record);

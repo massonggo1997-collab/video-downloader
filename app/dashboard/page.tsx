@@ -48,7 +48,7 @@ export default function DashboardPage() {
             format: 'MP4',
             status: 'COMPLETED',
             createdAt: new Date().toISOString(),
-            fileUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+            fileUrl: 'https://vjs.zencdn.net/v/oceans.mp4',
           },
           {
             id: 'job_sample_2',

@@ -122,6 +122,12 @@ export class HTML5VideoExtractor implements VideoExtractor {
 
     const formats = await this.getFormats(urlStr, fetchedHtml);
 
+    // If direct file download links were found in the HTML (e.g. Mp4Upload, Qiwi, Gofile links), use the best direct file link
+    const bestDirectFileLink = formats.find(f => f.sourceUrl && f.sourceUrl.startsWith('http') && f.sourceUrl !== urlStr)?.sourceUrl;
+    if (bestDirectFileLink) {
+      detectedStreamUrl = bestDirectFileLink;
+    }
+
     return {
       title: pageTitle,
       thumbnail,

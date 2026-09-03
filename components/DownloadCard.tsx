@@ -103,7 +103,10 @@ export function DownloadCard({
 
         {/* Action Button */}
         {status === 'COMPLETED' && fileUrl && (
-          <a href={fileUrl} download target="_blank" rel="noopener noreferrer">
+          <a
+            href={`/api/proxy-download?url=${encodeURIComponent(fileUrl)}&filename=${encodeURIComponent(title.replace(/[^a-zA-Z0-9_-]/g, '_') || 'video')}`}
+            download
+          >
             <Button variant="gradient" size="lg" className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-emerald-600/20 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500">
               <Download className="h-5 w-5 mr-2" />
               <span>DOWNLOAD FILE NOW</span>

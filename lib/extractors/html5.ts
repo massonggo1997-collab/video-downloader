@@ -38,7 +38,7 @@ export class HTML5VideoExtractor implements VideoExtractor {
     let thumbnail: string | undefined = `https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&auto=format&fit=crop&q=80`;
 
     let detectedStreamUrl = urlStr;
-    let durationSec = 1420; // Default 23-minute episode estimate for anime streaming pages
+    let durationSec: number | undefined = undefined;
     let fetchedHtml: string | undefined = undefined;
 
     // Attempt to fetch public page metadata safely with a tight timeout

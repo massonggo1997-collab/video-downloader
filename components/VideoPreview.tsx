@@ -10,6 +10,8 @@ interface VideoPreviewProps {
 }
 
 export function VideoPreview({ video }: VideoPreviewProps) {
+  const [duration, setDuration] = React.useState<number | undefined>(video.duration);
+
   return (
     <Card className="p-6 overflow-hidden border-white/10 bg-slate-900/90 shadow-2xl space-y-5">
       {/* Title & Metadata Header */}
@@ -24,12 +26,10 @@ export function VideoPreview({ video }: VideoPreviewProps) {
             <span className="font-mono text-slate-300">{video.sourceDomain}</span>
           </div>
 
-          {video.duration ? (
-            <div className="flex items-center space-x-1.5 bg-slate-800/80 px-3 py-1 rounded-full border border-white/10">
-              <Clock className="h-3.5 w-3.5 text-indigo-400" />
-              <span>{formatDuration(video.duration)}</span>
-            </div>
-          ) : null}
+          <div className="flex items-center space-x-1.5 bg-slate-800/80 px-3 py-1 rounded-full border border-white/10">
+            <Clock className="h-3.5 w-3.5 text-indigo-400" />
+            <span>{duration ? formatDuration(duration) : 'Live Playback'}</span>
+          </div>
         </div>
       </div>
 
@@ -46,7 +46,16 @@ export function VideoPreview({ video }: VideoPreviewProps) {
 
           <div className="relative aspect-video w-full bg-black">
             {video.sourceUrl.endsWith('.mp4') || video.sourceUrl.endsWith('.webm') ? (
-              <video src={video.sourceUrl} controls className="w-full h-full object-contain" />
+              <video
+                src={video.sourceUrl}
+                controls
+                className="w-full h-full object-contain"
+                onLoadedMetadata={(e) => {
+                  if (e.currentTarget.duration && !isNaN(e.currentTarget.duration)) {
+                    setDuration(Math.floor(e.currentTarget.duration));
+                  }
+                }}
+              />
             ) : (
               <iframe
                 src={video.sourceUrl}

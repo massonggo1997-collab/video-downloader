@@ -58,6 +58,31 @@ export function VideoPreview({ video }: VideoPreviewProps) {
               </div>
             ) : null}
           </div>
+
+          {/* Interactive Player Preview & Playback Stream */}
+          {video.sourceUrl && (
+            <div className="w-full rounded-xl overflow-hidden border border-white/10 bg-slate-950 mt-4 shadow-xl text-left">
+              <div className="bg-slate-900/90 px-4 py-2 text-xs font-mono text-slate-400 border-b border-white/10 flex items-center justify-between">
+                <span className="flex items-center space-x-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-slate-200 font-semibold">Interactive Video Player</span>
+                </span>
+                <span className="text-[11px] text-slate-400">Right-click &quot;Save video as...&quot;</span>
+              </div>
+              <div className="relative aspect-video w-full bg-black">
+                {video.sourceUrl.endsWith('.mp4') || video.sourceUrl.endsWith('.webm') ? (
+                  <video src={video.sourceUrl} controls className="w-full h-full object-contain" />
+                ) : (
+                  <iframe
+                    src={video.sourceUrl}
+                    className="w-full h-full border-0"
+                    allowFullScreen
+                    allow="autoplay; encrypted-media"
+                  />
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Card>

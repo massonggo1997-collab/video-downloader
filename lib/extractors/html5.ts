@@ -114,13 +114,41 @@ export class HTML5VideoExtractor implements VideoExtractor {
           thumbnail = imageMatch[1].trim();
         }
 
-        // Extract embedded player iframe src
-        const iframeMatch = html.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+        // Extract embedded player iframe src (preferring id="mediaplayer" or any iframe player)
+        const iframeMatch = html.match(/<iframe[^>]*id=["']mediaplayer["'][^>]*src=["']([^"']+)["']/i) ||
+                            html.match(/<iframe[^>]*src=["']([^"']+)["'][^>]*id=["']mediaplayer["']/i) ||
+                            html.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+
         if (iframeMatch && iframeMatch[1]) {
           try {
             const resolvedIframeUrl = new URL(iframeMatch[1], urlStr).toString();
             if (resolvedIframeUrl.startsWith('http://') || resolvedIframeUrl.startsWith('https://')) {
               detectedStreamUrl = resolvedIframeUrl;
+
+              // Attempt level 2 iframe resolution if level 1 is an intermediate player wrapper
+              if (resolvedIframeUrl.includes('adsbatch') || resolvedIframeUrl.includes('player') || resolvedIframeUrl.includes('upload')) {
+                try {
+                  const level2Res = await fetch(resolvedIframeUrl, {
+                    signal: controller.signal,
+                    headers: {
+                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                      'Referer': urlStr,
+                    },
+                  });
+                  if (level2Res.ok) {
+                    const level2Html = await level2Res.text();
+                    const level2Match = level2Html.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+                    if (level2Match && level2Match[1]) {
+                      const resolvedLevel2Url = new URL(level2Match[1], resolvedIframeUrl).toString();
+                      if (resolvedLevel2Url.startsWith('http://') || resolvedLevel2Url.startsWith('https://')) {
+                        detectedStreamUrl = resolvedLevel2Url;
+                      }
+                    }
+                  }
+                } catch {
+                  // Keep level 1 URL
+                }
+              }
             }
           } catch {
             detectedStreamUrl = urlStr;

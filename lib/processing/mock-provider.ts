@@ -61,7 +61,7 @@ export class MockProcessingProvider implements ProcessingProvider {
     } else {
       record.status = 'COMPLETED';
       record.progress = 100;
-      record.fileUrl = 'https://vjs.zencdn.net/v/oceans.mp4';
+      record.fileUrl = record.sourceUrl || 'https://vjs.zencdn.net/v/oceans.mp4';
     }
 
     mockJobsStore.set(id, record);

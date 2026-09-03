@@ -1,7 +1,8 @@
 import React from 'react';
 import Image from 'next/image';
-import { Clock, Globe, Film } from 'lucide-react';
+import { Clock, Globe, Film, Download } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { formatDuration } from '@/lib/utils';
 import { VideoInfo } from '@/types/video';
 
@@ -67,8 +68,9 @@ export function VideoPreview({ video }: VideoPreviewProps) {
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="text-slate-200 font-semibold">Interactive Video Player</span>
                 </span>
-                <span className="text-[11px] text-slate-400">Right-click &quot;Save video as...&quot;</span>
+                <span className="text-[11px] text-slate-400">Right-click player to &quot;Save video as...&quot;</span>
               </div>
+              
               <div className="relative aspect-video w-full bg-black">
                 {video.sourceUrl.endsWith('.mp4') || video.sourceUrl.endsWith('.webm') ? (
                   <video src={video.sourceUrl} controls className="w-full h-full object-contain" />
@@ -80,6 +82,27 @@ export function VideoPreview({ video }: VideoPreviewProps) {
                     allow="autoplay; encrypted-media"
                   />
                 )}
+              </div>
+
+              {/* Direct Playback Stream Download Action Bar right below the Player */}
+              <div className="p-4 bg-slate-900/95 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="text-xs text-slate-300 flex items-center space-x-2">
+                  <span className="h-2 w-2 rounded-full bg-blue-400 shrink-0" />
+                  <span>Detected iFrame Stream Player</span>
+                </div>
+                <a
+                  href={`/api/proxy-download?url=${encodeURIComponent(video.sourceUrl)}&filename=${encodeURIComponent(video.title.replace(/[^a-zA-Z0-9_-]/g, '_'))}`}
+                  download
+                  className="w-full sm:w-auto"
+                >
+                  <Button
+                    size="default"
+                    className="w-full sm:w-auto font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-500/20 rounded-lg px-5 h-10"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    <span>DOWNLOAD PLAYBACK STREAM</span>
+                  </Button>
+                </a>
               </div>
             </div>
           )}
